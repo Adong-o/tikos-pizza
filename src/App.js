@@ -193,6 +193,8 @@ function App() {
             flexDirection: 'column',
             minHeight: '100vh',
             bgcolor: 'background.default',
+            position: 'relative',
+            overflow: 'hidden'
           }}
         >
           <Navbar 
@@ -200,27 +202,49 @@ function App() {
             onCartClick={() => setIsCartOpen(true)}
           />
           
-          <Cart
-            open={isCartOpen}
-            onClose={() => setIsCartOpen(false)}
-            items={cartItems}
-            onRemoveItem={handleRemoveFromCart}
-            onUpdateQuantity={handleUpdateQuantity}
-            onCheckout={handleCheckout}
-          />
-
-          <Box component="main" sx={{ flex: 1 }}>
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              width: '100%',
+              maxWidth: '1200px',
+              mx: 'auto',
+              px: { xs: 2, sm: 3, md: 4 },
+              py: { xs: 2, sm: 3 },
+              position: 'relative',
+              zIndex: 1
+            }}
+          >
             <Routes>
-              <Route path="/" element={<Home onAddToCart={handleAddToCart} />} />
+              <Route path="/" element={<Home />} />
               <Route 
-                path="/menu" 
-                element={<Products onAddToCart={handleAddToCart} />} 
+                path="/products" 
+                element={
+                  <Products 
+                    onAddToCart={handleAddToCart}
+                  />
+                } 
               />
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </Box>
 
           <Footer />
+
+          <Cart
+            open={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            items={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveFromCart}
+            onCheckout={handleCheckout}
+            sx={{
+              '& .MuiDrawer-paper': {
+                width: { xs: '100%', sm: 400 },
+                maxWidth: '100%'
+              }
+            }}
+          />
         </Box>
       </Router>
     </ThemeProvider>

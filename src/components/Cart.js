@@ -45,20 +45,25 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
           width: { xs: '100%', sm: 400 },
           p: 2,
           bgcolor: 'background.default',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" component="h2">
-          Your Cart
+          Your Cart ({items.length} {items.length === 1 ? 'item' : 'items'})
         </Typography>
-        <IconButton onClick={onClose} size="large">
+        <IconButton onClick={onClose} size="large" sx={{ color: 'text.secondary' }}>
           <CloseIcon />
         </IconButton>
       </Box>
 
       {items.length === 0 ? (
         <Box
+          component={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -75,15 +80,20 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
             variant="contained"
             color="primary"
             onClick={onClose}
-            sx={{ mt: 2 }}
+            sx={{
+              mt: 2,
+              px: 4,
+              borderRadius: '24px',
+              textTransform: 'none',
+            }}
           >
             Continue Shopping
           </Button>
         </Box>
       ) : (
         <>
-          <List sx={{ flexGrow: 1, overflow: 'auto' }}>
-            <AnimatePresence>
+          <List sx={{ flexGrow: 1, overflow: 'auto', my: 2 }}>
+            <AnimatePresence mode="popLayout">
               {items.map((item) => (
                 <MotionListItem
                   key={item.id}
@@ -99,9 +109,12 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
                     bgcolor: 'background.paper',
                     borderRadius: 2,
                     boxShadow: 1,
+                    '&:hover': {
+                      boxShadow: 2,
+                    },
                   }}
                 >
-                  <Box sx={{ display: 'flex', width: '100%', p: 1 }}>
+                  <Box sx={{ display: 'flex', width: '100%', p: 1.5 }}>
                     <Box
                       component="img"
                       src={item.image}
@@ -117,14 +130,20 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
                     <Box sx={{ flexGrow: 1 }}>
                       <ListItemText
                         primary={item.name}
-                        secondary={`$${(item.price * item.quantity).toFixed(2)}`}
+                        secondary={
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="primary.main"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </Typography>
+                        }
                         primaryTypographyProps={{
                           variant: 'subtitle1',
                           fontWeight: 'bold',
-                        }}
-                        secondaryTypographyProps={{
-                          variant: 'body2',
-                          color: 'primary',
+                          gutterBottom: true,
                         }}
                       />
                       <Box
@@ -135,14 +154,23 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
                           gap: 2,
                         }}
                       >
-                        <ButtonGroup size="small" aria-label="quantity controls">
+                        <ButtonGroup 
+                          size="small" 
+                          aria-label="quantity controls"
+                          sx={{ 
+                            '& .MuiButton-root': {
+                              borderColor: 'primary.main',
+                              color: 'primary.main',
+                            }
+                          }}
+                        >
                           <Button
                             onClick={() => handleQuantityChange(item, -1)}
                             disabled={item.quantity <= 1}
                           >
                             <RemoveIcon fontSize="small" />
                           </Button>
-                          <Button disabled sx={{ px: 2 }}>
+                          <Button disabled sx={{ px: 2, minWidth: 40 }}>
                             {item.quantity}
                           </Button>
                           <Button
@@ -156,6 +184,11 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
                           onClick={() => onRemoveItem(item.id)}
                           color="error"
                           size="small"
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: 'error.lighter',
+                            },
+                          }}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -178,7 +211,7 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
               }}
             >
               <Typography variant="h6">Total:</Typography>
-              <Typography variant="h6" color="primary">
+              <Typography variant="h6" color="primary" fontWeight="bold">
                 ${totalAmount.toFixed(2)}
               </Typography>
             </Box>
@@ -193,9 +226,15 @@ const Cart = ({ open, onClose, items, onRemoveItem, onUpdateQuantity, onCheckout
                 py: 1.5,
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
+                borderRadius: '28px',
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4,
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              Checkout
+              Proceed to Checkout
             </Button>
           </Box>
         </>

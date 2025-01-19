@@ -9,7 +9,19 @@ import {
   Radio,
   Button,
   Grid,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
+
+const validateEmail = (email) => {
+  return String(email)
+    .toLowerCase()
+    .match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+};
+
+const validatePhone = (phone) => {
+  return String(phone).match(/^\+?[\d\s-]{10,}$/);
+};
 
 const Checkout = ({ cartItems, onOrderComplete }) => {
   const [formData, setFormData] = useState({
@@ -19,20 +31,81 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
     orderType: 'delivery',
     address: '',
   });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone is required';
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (formData.orderType === 'delivery' && !formData.address.trim()) {
+      newErrors.address = 'Delivery address is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onOrderComplete(formData);
+    setSubmitError('');
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onOrderComplete(formData);
+      // Reset form after successful submission
+      setFormData({
+        name: '',
+        phone: '',
+        email: '',
+        orderType: 'delivery',
+        address: '',
+      });
+    } catch (error) {
+      setSubmitError('Failed to place order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const total = cartItems.reduce((sum, item) => sum + item.price, 0);
+  const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const deliveryFee = formData.orderType === 'delivery' ? 5.00 : 0;
+  const finalTotal = total + deliveryFee;
 
   return (
     <Box sx={{ padding: 4 }}>
@@ -40,6 +113,12 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
         <Typography variant="h5" gutterBottom>
           Checkout
         </Typography>
+        
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
         
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
@@ -51,6 +130,8 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
+                error={!!errors.name}
+                helperText={errors.name}
               />
             </Grid>
             
@@ -62,6 +143,9 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                error={!!errors.phone}
+                helperText={errors.phone}
+                placeholder="+1234567890"
               />
             </Grid>
             
@@ -74,6 +158,8 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
               />
             </Grid>
 
@@ -87,7 +173,7 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                 <FormControlLabel
                   value="delivery"
                   control={<Radio />}
-                  label="Delivery"
+                  label="Delivery (+$5.00)"
                 />
                 <FormControlLabel
                   value="pickup"
@@ -106,6 +192,8 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
+                  error={!!errors.address}
+                  helperText={errors.address}
                   multiline
                   rows={2}
                 />
@@ -113,9 +201,19 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
             )}
 
             <Grid item xs={12}>
-              <Typography variant="h6">
-                Total: ${total.toFixed(2)}
-              </Typography>
+              <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2 }}>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Subtotal: ${total.toFixed(2)}
+                </Typography>
+                {formData.orderType === 'delivery' && (
+                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                    Delivery Fee: ${deliveryFee.toFixed(2)}
+                  </Typography>
+                )}
+                <Typography variant="h6" color="primary">
+                  Total: ${finalTotal.toFixed(2)}
+                </Typography>
+              </Box>
             </Grid>
 
             <Grid item xs={12}>
@@ -125,8 +223,14 @@ const Checkout = ({ cartItems, onOrderComplete }) => {
                 color="primary"
                 fullWidth
                 size="large"
+                disabled={isSubmitting}
+                sx={{ height: 48 }}
               >
-                Place Order
+                {isSubmitting ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Place Order'
+                )}
               </Button>
             </Grid>
           </Grid>
