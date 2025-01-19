@@ -1,250 +1,132 @@
-import React, { useState, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
+import LoadingBar from 'react-top-loading-bar';
+
+import theme from './theme';
+
+// Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Cart from './components/Cart';
-import Home from './pages/Home';
-import Products from './pages/Products';
-import Contact from './pages/Contact';
-import './App.css';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#FF4B2B',
-      dark: '#E63E1C',
-      light: '#FF6B4A',
-      lighter: 'rgba(255, 75, 43, 0.1)',
-    },
-    secondary: {
-      main: '#FFD700',
-      dark: '#FFC700',
-      light: '#FFE14D',
-    },
-    background: {
-      default: '#FFFFFF',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#2D3436',
-      secondary: '#636E72',
-    },
-  },
-  typography: {
-    fontFamily: '"Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontWeight: 800,
-      letterSpacing: '-0.5px',
-    },
-    h2: {
-      fontWeight: 700,
-      letterSpacing: '-0.5px',
-    },
-    h3: {
-      fontWeight: 700,
-    },
-    h4: {
-      fontWeight: 600,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 600,
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 30,
-          padding: '10px 24px',
-          fontSize: '1rem',
-          transition: 'all 0.3s ease',
-        },
-        contained: {
-          boxShadow: 'none',
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: '0 6px 20px rgba(255, 75, 43, 0.23)',
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-8px)',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
-          },
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#FFFFFF',
-          color: '#2D3436',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-        },
-      },
-    },
-    MuiDrawer: {
-      styleOverrides: {
-        paper: {
-          borderRadius: '0 16px 16px 0',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          fontWeight: 600,
-        },
-      },
-    },
-    MuiCssBaseline: {
-      styleOverrides: {
-        '*': {
-          boxSizing: 'border-box',
-          margin: 0,
-          padding: 0,
-        },
-        html: {
-          scrollBehavior: 'smooth',
-        },
-        body: {
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-        },
-        a: {
-          textDecoration: 'none',
-          color: 'inherit',
-        },
-      },
-    },
-  },
-});
+// Pages
+import Home from './pages/Home';
+import Menu from './pages/Menu';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Locations from './pages/Locations';
+
+const pageTransition = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
 
 function App() {
+  const location = useLocation();
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddToCart = useCallback((item) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+  useEffect(() => {
+    setIsLoading(true);
+    setProgress(30);
+    
+    const timer = setTimeout(() => {
+      setProgress(100);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  const handleAddToCart = (item) => {
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find((i) => i.id === item.id);
       if (existingItem) {
-        return prevItems.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
+        return prevItems.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       return [...prevItems, { ...item, quantity: 1 }];
     });
-  }, []);
+  };
 
-  const handleRemoveFromCart = useCallback((itemId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-  }, []);
-
-  const handleUpdateQuantity = useCallback((itemId, newQuantity) => {
+  const handleUpdateQuantity = (itemId, newQuantity) => {
     if (newQuantity === 0) {
-      handleRemoveFromCart(itemId);
-      return;
+      setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+    } else {
+      setCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: newQuantity } : item
+        )
+      );
     }
+  };
 
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-  }, [handleRemoveFromCart]);
-
-  const handleCheckout = useCallback(() => {
-    setCartItems([]);
-    setIsCartOpen(false);
-  }, []);
-
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const getTotalItems = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <LoadingBar
+        color="#FF4D4D"
+        progress={progress}
+        onLoaderFinished={() => setProgress(0)}
+        height={3}
+      />
       <Router>
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             minHeight: '100vh',
-            bgcolor: 'background.default',
-            position: 'relative',
-            overflow: 'hidden'
           }}
         >
-          <Navbar 
-            cartItemsCount={totalItems}
+          <Navbar
+            cartItemsCount={getTotalItems()}
             onCartClick={() => setIsCartOpen(true)}
           />
           
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              width: '100%',
-              maxWidth: '1200px',
-              mx: 'auto',
-              px: { xs: 2, sm: 3, md: 4 },
-              py: { xs: 2, sm: 3 },
-              position: 'relative',
-              zIndex: 1
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route 
-                path="/products" 
-                element={
-                  <Products 
-                    onAddToCart={handleAddToCart}
+          <Box component="main" sx={{ flexGrow: 1 }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={pageTransition}
+                transition={{ duration: 0.3 }}
+              >
+                <Routes location={location} key={location.pathname}>
+                  <Route path="/" element={<Home />} />
+                  <Route
+                    path="/menu"
+                    element={<Menu onAddToCart={handleAddToCart} />}
                   />
-                } 
-              />
-              <Route path="/contact" element={<Contact />} />
-            </Routes>
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/locations" element={<Locations />} />
+                </Routes>
+              </motion.div>
+            </AnimatePresence>
           </Box>
-
-          <Footer />
 
           <Cart
             open={isCartOpen}
             onClose={() => setIsCartOpen(false)}
             items={cartItems}
             onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveFromCart}
-            onCheckout={handleCheckout}
-            sx={{
-              '& .MuiDrawer-paper': {
-                width: { xs: '100%', sm: 400 },
-                maxWidth: '100%'
-              }
-            }}
           />
+
+          <Footer />
         </Box>
       </Router>
     </ThemeProvider>
