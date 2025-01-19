@@ -1,49 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ThemeProvider, CssBaseline, Box } from '@mui/material';
-import LoadingBar from 'react-top-loading-bar';
-
+import React, { useState } from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
 import theme from './theme';
 
 // Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Cart from './components/Cart';
-
-// Pages
-import Home from './pages/Home';
-import Menu from './pages/Menu';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Locations from './pages/Locations';
-
-const pageTransition = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-};
+import MainContent from './components/MainContent';
 
 function App() {
-  const location = useLocation();
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    setIsLoading(true);
-    setProgress(30);
-    
-    const timer = setTimeout(() => {
-      setProgress(100);
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
 
   const handleAddToCart = (item) => {
     setCartItems((prevItems) => {
@@ -74,15 +44,9 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <LoadingBar
-        color="#FF4D4D"
-        progress={progress}
-        onLoaderFinished={() => setProgress(0)}
-        height={3}
-      />
-      <Router>
+    <Router>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         <Box
           sx={{
             display: 'flex',
@@ -96,27 +60,7 @@ function App() {
           />
           
           <Box component="main" sx={{ flexGrow: 1 }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                variants={pageTransition}
-                transition={{ duration: 0.3 }}
-              >
-                <Routes location={location} key={location.pathname}>
-                  <Route path="/" element={<Home />} />
-                  <Route
-                    path="/menu"
-                    element={<Menu onAddToCart={handleAddToCart} />}
-                  />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/locations" element={<Locations />} />
-                </Routes>
-              </motion.div>
-            </AnimatePresence>
+            <MainContent onAddToCart={handleAddToCart} />
           </Box>
 
           <Cart
@@ -128,8 +72,8 @@ function App() {
 
           <Footer />
         </Box>
-      </Router>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 
