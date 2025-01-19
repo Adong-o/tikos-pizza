@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import StarIcon from '@mui/icons-material/Star';
 import { images } from '../assets/images';
 
 const StyledCard = styled(motion(Card))(({ theme }) => ({
@@ -170,7 +171,7 @@ const Products = ({ onAddToCart }) => {
                 textAlign: 'center',
               }}
             >
-              Our Menu
+              Our Pizza Menu
             </Typography>
             <Box sx={{ maxWidth: 600, mx: 'auto', mb: 4 }}>
               <TextField
@@ -200,72 +201,103 @@ const Products = ({ onAddToCart }) => {
           <Grid container spacing={3}>
             {filteredPizzas.map((pizza) => (
               <Grid item xs={12} sm={6} md={4} key={pizza.id}>
-                <motion.div variants={itemVariants}>
-                  <StyledCard>
-                    <StyledCardMedia
-                      component="img"
-                      image={pizza.image}
-                      title={pizza.name}
-                    />
-                    <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Typography gutterBottom variant="h5" component="h2" sx={{ mr: 1 }}>
-                          {pizza.name}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <Chip
-                            label={`${pizza.rating}★`}
-                            size="small"
-                            color="primary"
-                            sx={{ fontWeight: 600 }}
-                          />
-                          {pizza.isSpicy && (
-                            <Chip
-                              icon={<LocalFireDepartmentIcon />}
-                              label="Spicy"
-                              size="small"
-                              color="error"
-                              sx={{ fontWeight: 600 }}
-                            />
-                          )}
-                        </Box>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" paragraph>
-                        {pizza.description}
+                <StyledCard
+                  variants={itemVariants}
+                  whileHover={{ y: -8 }}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <StyledCardMedia
+                    image={pizza.image}
+                    title={pizza.name}
+                  />
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        {pizza.name}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
-                          ${pizza.price.toFixed(2)}
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <StarIcon sx={{ color: 'warning.main', mr: 0.5 }} />
+                        <Typography variant="subtitle2">
+                          {pizza.rating}
                         </Typography>
-                        <Chip
-                          label={pizza.category}
-                          size="small"
-                          color="secondary"
-                          sx={{ fontWeight: 600 }}
-                        />
                       </Box>
-                    </CardContent>
-                    <CardActions sx={{ p: 2, pt: 0 }}>
-                      <Button
-                        size="large"
-                        fullWidth
-                        variant="contained"
-                        onClick={() => onAddToCart(pizza)}
-                        startIcon={<ShoppingCartIcon />}
-                        sx={{
-                          textTransform: 'none',
-                          py: 1,
-                          fontSize: '1.1rem',
-                        }}
-                      >
-                        Add to Cart
-                      </Button>
-                    </CardActions>
-                  </StyledCard>
-                </motion.div>
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 2, minHeight: 40 }}
+                    >
+                      {pizza.description}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                      {pizza.isVegetarian && (
+                        <Chip
+                          label="Vegetarian"
+                          size="small"
+                          color="success"
+                          variant="outlined"
+                        />
+                      )}
+                      {pizza.isSpicy && (
+                        <Chip
+                          icon={<LocalFireDepartmentIcon />}
+                          label="Spicy"
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                    <Typography
+                      variant="h6"
+                      color="primary"
+                      sx={{ fontWeight: 600 }}
+                    >
+                      ${pizza.price.toFixed(2)}
+                    </Typography>
+                  </CardContent>
+                  <CardActions sx={{ p: 2, pt: 0 }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      startIcon={<ShoppingCartIcon />}
+                      onClick={() => {
+                        onAddToCart({
+                          ...pizza,
+                          quantity: 1
+                        });
+                      }}
+                      sx={{
+                        borderRadius: '20px',
+                        py: 1,
+                        textTransform: 'none',
+                        fontSize: '1rem',
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </CardActions>
+                </StyledCard>
               </Grid>
             ))}
           </Grid>
+
+          {filteredPizzas.length === 0 && (
+            <Box
+              sx={{
+                textAlign: 'center',
+                py: 8,
+              }}
+            >
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No pizzas found
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Try adjusting your search terms
+              </Typography>
+            </Box>
+          )}
         </motion.div>
       </Container>
     </Box>
